@@ -5,10 +5,9 @@
 
 -----------------------------------------------------------------
 -- Create sessions table
-CREATE TABLE "sessions" (
-    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+CREATE TABLE "session_tokens" (
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v7 (),
     "user_id" UUID NOT NULL REFERENCES "user" ("id") ON DELETE CASCADE,
-    "session_token" VARCHAR(255) NOT NULL UNIQUE,
     "created_at" TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     "expires_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL
 );
@@ -22,9 +21,8 @@ CREATE INDEX idx_sessions_expires_at ON "sessions" ("expires_at");
 -----------------------------------------------------------------
 -- Create refresh_tokens table
 CREATE TABLE "refresh_tokens" (
-    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v7 (),
     "user_id" UUID NOT NULL REFERENCES "user" ("id") ON DELETE CASCADE,
-    "token" VARCHAR(255) NOT NULL UNIQUE,
     "created_at" TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     "expires_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL
 );
