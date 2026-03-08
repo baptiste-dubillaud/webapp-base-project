@@ -1,0 +1,62 @@
+services:
+    db:
+        image: pgvector/pgvector:pg18
+        container_name: app-db
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER:-app}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app_password}
+            POSTGRES_DB: ${POSTGRES_DB:-appdb}
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+            start_period: 5s
+        ports:
+            - "${POSTGRES_PORT:-5432}:5432"
+        volumes:
+            - webapp-db-data:/var/lib/postgresql
+        networks:
+            -  webapp-network
+
+    backend:
+        build: ./backend
+        container_name: app-backend
+        environment:
+            POSTGRES_HOST: db
+            POSTGRES_PORT: 5432
+            POSTGRES_USER: ${POSTGRES_USER:-app}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app_password}
+            POSTGRES_DB: ${POSTGRES_DB:-appdb}
+        volumes:
+            - ./backend/src:/app/src
+        ports:
+            - "8000:8000"
+        depends_on:
+            db:
+                condition: service_healthy
+        networks:
+            -  webapp-network
+        restart: unless-stopped
+
+    frontend:
+        build: ./frontend
+        container_name: app-frontend
+        volumes:
+            - ./frontend:/app
+            - /app/node_modules
+        ports:
+            - "3000:3000"
+        depends_on:
+            db:
+                condition: service_healthy
+        networks:
+            -  webapp-network
+        restart: unless-stopped
+
+networks:
+    webapp-network:
+        driver: bridge
+
+volumes:
+    webapp-db-data:
